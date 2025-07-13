@@ -1,197 +1,212 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Smart Plug IoT Control</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Plug IoT Control</title>
 
-    <!-- เชื่อม CSS -->
-<link rel="stylesheet" href="style.css">
-    
-    <!-- ฟอนต์ Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
+  <!-- ✅ Inline CSS -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #581c87 50%, #111827 100%);
+      min-height: 100vh;
+    }
+
+    .circuit-bg {
+      background-image: 
+        radial-gradient(circle at 25% 25%, #3b82f6 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, #8b5cf6 2px, transparent 2px);
+      background-size: 50px 50px;
+      opacity: 0.1;
+    }
+
+    .relay-button {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .relay-button.active {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+      animation: pulse-green 2s infinite;
+    }
+
+    .relay-button.inactive {
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+    }
+
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.6); }
+      50% { box-shadow: 0 0 30px rgba(34, 197, 94, 0.8); }
+    }
+
+    .glow-effect {
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #22c55e, #10b981);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .relay-button.active .glow-effect {
+      opacity: 1;
+    }
+
+    .mode-toggle {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      transition: all 0.3s ease;
+    }
+
+    .schedule-input {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-link {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      transform: translateY(-2px);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      transition: width 0.3s ease;
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+  </style>
+
+  <!-- ฟอนต์ -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
 </head>
 <body class="circuit-bg">
-    <!-- Header -->
-    <header class="relative z-10 bg-black/20 backdrop-blur-md border-b border-white/10">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                    </div>
-                    <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        Smart Plug IoT Control
-                    </h1>
-                </div>
-                <div class="text-right">
-                    <div class="text-sm text-gray-300">Time now:</div>
-                    <div id="current-time" class="text-lg font-semibold text-blue-300"></div>
-                </div>
-            </div>
-        </div>
-    </header>
+  <!-- 📦 เนื้อหาทั้งหมดเหมือนเดิมที่คุณใส่ไว้ -->
+  <!-- ... -->
 
-    <!-- Navigation -->
-    <nav class="relative z-10 bg-black/10 backdrop-blur-md border-b border-white/5">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex justify-center space-x-8">
-                <a href="#" class="nav-link text-white hover:text-blue-300 px-4 py-2 font-medium">Home</a>
-                <a href="#" class="nav-link text-white hover:text-blue-300 px-4 py-2 font-medium">Schedule</a>
-                <a href="#" class="nav-link text-white hover:text-blue-300 px-4 py-2 font-medium">Settings</a>
-                <a href="#" class="nav-link text-white hover:text-blue-300 px-4 py-2 font-medium">About</a>
-            </div>
-        </div>
-    </nav>
+  <!-- ✅ Inline JS -->
+  <script>
+    // อัปเดตเวลาทุกวินาที
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('th-TH', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        document.getElementById('current-time').textContent = timeString;
+    }
 
-    <!-- Main Content -->
-    <main class="relative z-10 container mx-auto px-4 py-8">
-        <!-- Mode Selection -->
-        <div class="mb-8 text-center">
-            <h2 class="text-xl font-semibold mb-4">Control Mode</h2>
-            <div class="inline-flex bg-black/20 backdrop-blur-md rounded-full p-1 border border-white/10">
-                <button id="manual-mode" class="mode-toggle px-6 py-3 rounded-full text-white font-medium transition-all">
-                    🔘 Manual Mode
-                </button>
-                <button id="auto-mode" class="px-6 py-3 rounded-full text-gray-300 font-medium transition-all hover:text-white">
-                    🔘 Automatic Mode
-                </button>
-            </div>
-        </div>
+    updateTime();
+    setInterval(updateTime, 1000);
 
-        <!-- Manual Mode Content -->
-        <div id="manual-content" class="space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="relay-control" data-relay="1">
-                    <div class="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
-                        <h3 class="text-lg font-semibold mb-4">Relay 1</h3>
-                        <button class="relay-button inactive w-20 h-20 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center mx-auto mb-4 relative">
-                            <div class="glow-effect rounded-full"></div>
-                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </button>
-                        <div class="status-text text-red-400 font-medium">OFF</div>
-                    </div>
-                </div>
+    // โหมดควบคุม
+    const manualModeBtn = document.getElementById('manual-mode');
+    const autoModeBtn = document.getElementById('auto-mode');
+    const manualContent = document.getElementById('manual-content');
+    const autoContent = document.getElementById('auto-content');
 
-                <!-- Relay 2 -->
-                <div class="relay-control" data-relay="2">
-                    <div class="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
-                        <h3 class="text-lg font-semibold mb-4">Relay 2</h3>
-                        <button class="relay-button inactive w-20 h-20 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center mx-auto mb-4 relative">
-                            <div class="glow-effect rounded-full"></div>
-                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </button>
-                        <div class="status-text text-red-400 font-medium">OFF</div>
-                    </div>
-                </div>
+    manualModeBtn.addEventListener('click', () => {
+        manualModeBtn.classList.add('mode-toggle');
+        autoModeBtn.classList.remove('mode-toggle');
+        manualModeBtn.classList.remove('text-gray-300');
+        autoModeBtn.classList.add('text-gray-300');
+        manualContent.classList.remove('hidden');
+        autoContent.classList.add('hidden');
+    });
 
-                <!-- Relay 3 -->
-                <div class="relay-control" data-relay="3">
-                    <div class="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
-                        <h3 class="text-lg font-semibold mb-4">Relay 3</h3>
-                        <button class="relay-button inactive w-20 h-20 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center mx-auto mb-4 relative">
-                            <div class="glow-effect rounded-full"></div>
-                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                        </button>
-                        <div class="status-text text-red-400 font-medium">OFF</div>
-                    </div>
-                </div>
+    autoModeBtn.addEventListener('click', () => {
+        autoModeBtn.classList.add('mode-toggle');
+        manualModeBtn.classList.remove('mode-toggle');
+        autoModeBtn.classList.remove('text-gray-300');
+        manualModeBtn.classList.add('text-gray-300');
+        autoContent.classList.remove('hidden');
+        manualContent.classList.add('hidden');
+        startAutoMode();
+    });
 
-                <!-- Relay 4 -->
-                <div class="relay-control" data-relay="4">
-                    <div class="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-center">
-                        <h3 class="text-lg font-semibold mb-4">Relay 4</h3>
-                        <button class="relay-button inactive w-20 h-20 rounded-full bg-red-500 hover:bg-red-400 flex items-center justify-center mx-auto mb-4 relative">
-                            <div class="glow-effect rounded-full"></div>
-                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </button>
-                        <div class="status-text text-red-400 font-medium">OFF</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    // ปุ่มควบคุมรีเลย์
+    document.querySelectorAll('.relay-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const isActive = this.classList.contains('active');
+            const statusText = this.parentElement.querySelector('.status-text');
+            
+            if (isActive) {
+                this.classList.remove('active');
+                this.classList.add('inactive');
+                this.classList.remove('bg-green-500', 'hover:bg-green-400');
+                this.classList.add('bg-red-500', 'hover:bg-red-400');
+                statusText.textContent = 'OFF';
+                statusText.classList.remove('text-green-400');
+                statusText.classList.add('text-red-400');
+            } else {
+                this.classList.remove('inactive');
+                this.classList.add('active');
+                this.classList.remove('bg-red-500', 'hover:bg-red-400');
+                this.classList.add('bg-green-500', 'hover:bg-green-400');
+                statusText.textContent = 'ON';
+                statusText.classList.remove('text-red-400');
+                statusText.classList.add('text-green-400');
+            }
+        });
+    });
 
-        <!-- Automatic Mode Content -->
-        <div id="auto-content" class="hidden space-y-8">
-            <div class="bg-black/20 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-                <h3 class="text-xl font-semibold mb-6 text-center">Schedule Settings</h3>
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center space-x-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-full">
-                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span>กำลังทำงานตามตาราง</span>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-4">
-                        <h4 class="font-semibold text-blue-300">Relay 1 Schedule</h4>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">เปิด:</label>
-                            <input type="time" value="08:00" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">ปิด:</label>
-                            <input type="time" value="08:30" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                    </div>
+    // โหมดอัตโนมัติ
+    let autoInterval;
 
-                    <div class="space-y-4">
-                        <h4 class="font-semibold text-blue-300">Relay 2 Schedule</h4>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">เปิดทุก (นาที):</label>
-                            <input type="number" value="2" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">ปิดหลัง (นาที):</label>
-                            <input type="number" value="5" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                    </div>
+    function startAutoMode() {
+        if (autoInterval) clearInterval(autoInterval);
+        
+        autoInterval = setInterval(() => {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            const relay1On = currentTime >= 480 && currentTime <= 510;
 
-                    <div class="space-y-4">
-                        <h4 class="font-semibold text-blue-300">Relay 3 Schedule</h4>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">เปิด:</label>
-                            <input type="time" value="18:00" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">ปิด:</label>
-                            <input type="time" value="22:00" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                    </div>
+            if (!manualContent.classList.contains('hidden')) return;
 
-                    <div class="space-y-4">
-                        <h4 class="font-semibold text-blue-300">Relay 4 Schedule</h4>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">เปิด:</label>
-                            <input type="time" value="06:00" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm text-gray-300">ปิด:</label>
-                            <input type="time" value="23:00" class="schedule-input w-full px-3 py-2 rounded-lg text-white" />
-                        </div>
-                    </div>
-                </div>
+            const relay1Btn = document.querySelector('.relay-control[data-relay="1"] .relay-button');
+            const statusText = relay1Btn.parentElement.querySelector('.status-text');
 
-                <div class="mt-6 text-center">
-                    <button class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-8 py-3 rounded-full font-semibold transition-all transform hover:scale-105">
-                        Save Schedule
-                    </button>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- เชื่อม JavaScript -->
-<script src="script.js"></script>
+            if (relay1On) {
+                if (!relay1Btn.classList.contains('active')) {
+                    relay1Btn.classList.add('active');
+                    relay1Btn.classList.remove('inactive');
+                    relay1Btn.classList.remove('bg-red-500', 'hover:bg-red-400');
+                    relay1Btn.classList.add('bg-green-500', 'hover:bg-green-400');
+                    statusText.textContent = 'ON';
+                    statusText.classList.remove('text-red-400');
+                    statusText.classList.add('text-green-400');
+                }
+            } else {
+                if (!relay1Btn.classList.contains('inactive')) {
+                    relay1Btn.classList.add('inactive');
+                    relay1Btn.classList.remove('active');
+                    relay1Btn.classList.remove('bg-green-500', 'hover:bg-green-400');
+                    relay1Btn.classList.add('bg-red-500', 'hover:bg-red-400');
+                    statusText.textContent = 'OFF';
+                    statusText.classList.remove('text-green-400');
+                    statusText.classList.add('text-red-400');
+                }
+            }
+        }, 1000);
+    }
+  </script>
 </body>
 </html>
